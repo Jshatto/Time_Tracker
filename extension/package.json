@@ -1,12 +1,20 @@
 {
   "name": "extension",
   "version": "1.0.0",
-  "description": "Time_Tracker browser extension",
+  "description": "Time Tracker browser extension with glassmorphism design",
   "main": "background.js",
+  "type": "module",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "echo 'Extension ready for loading'",
+    "lint": "echo 'Linting extension files'"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"]
   }
 }

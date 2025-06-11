@@ -1,12 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Time Tracker Extension",
-  "version": "1.0",
-  "description": "A Chrome extension to help track time and activity in the browser.",
+  "version": "1.0.0",
+  "description": "A beautiful Chrome extension to track time with glassmorphism design",
   "permissions": [
-    "tabs",
-    "activeTab",
-    "storage"
+    "storage",
+    "contextMenus",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "http://localhost:3000/*",
+    "https://time-tracker-nust.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -17,6 +22,7 @@
   },
   "icons": {
     "16": "icon.png",
+    "32": "icon.png",
     "48": "icon.png",
     "128": "icon.png"
   }
