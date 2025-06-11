@@ -8,4 +8,4 @@ services:
     startCommand: node index.js
     envVars:
       - key: MONGO_URI
-        value: false
+        value: mongodb+srv://timer-user:xeAqUYc4IgCBe8DD@cluster0.h9lehd6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
