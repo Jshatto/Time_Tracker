@@ -13,6 +13,6 @@ describe('Browser Extension Background Script', () => {
 
     require('../background');
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching(/Extension installed/i));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringMatching(/Extension loaded/i));
   });
 });

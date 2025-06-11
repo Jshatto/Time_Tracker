@@ -1,17 +1,18 @@
+const API_URL = 'http://localhost:5000'; // default server port
 const statusEl = document.getElementById('status');
 const toggle = document.getElementById('toggle');
 
 async function fetchState() {
-  const res = await fetch('http://localhost:5000/timer');
+  const res = await fetch(`${API_URL}/timer`);
   return res.json();
 }
 
 async function startTimer() {
-  await fetch('http://localhost:5000/timer/start', { method: 'POST' });
+  await fetch(`${API_URL}/timer/start`, { method: 'POST' });
 }
 
 async function stopTimer() {
-  await fetch('http://localhost:5000/timer/stop', { method: 'POST' });
+  await fetch(`${API_URL}/timer/stop`, { method: 'POST' });
 }
 
 async function refresh() {

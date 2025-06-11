@@ -19,6 +19,7 @@ npm install
 cd server
 npm start
 ```
+The API listens on **port 5000** by default. Set the `PORT` variable in `.env` if you need a different value.
 
 ### Desktop
 ```bash
@@ -42,4 +43,4 @@ Create `.env` files for each service using `.env.example` as a guide.
 The server exposes timer routes:
 
 - `POST /api/timer/start` – begin tracking for a user. Body should include `userId`.
-- `POST /api/timer/stop` – stop the active timer for a user and return the log with duration.
+- - `POST /api/timer/stop` – stop the active timer for a user and return the log with duration.

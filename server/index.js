@@ -1,9 +1,13 @@
 // server/index.js
 const mongoose = require('mongoose');
+const express = require('express');
 const app = require('./app');
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
+
+// Enable JSON body parsing
+app.use(express.json());
 
 mongoose.connect(MONGO_URI)
   .then(() => {
@@ -33,7 +37,6 @@ const clientRoutes = require('./routes/clients');
 app.use('/projects', projectRoutes);
 app.use('/clients', clientRoutes);
 
-app.use(express.json());
 app.use('/api/logs', require('./routes/logs'));
 
 app.use('/api/timer', require('./routes/timer'));
