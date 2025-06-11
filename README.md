@@ -44,3 +44,10 @@ The server exposes timer routes:
 
 - `POST /api/timer/start` – begin tracking for a user. Body should include `userId`.
 - - `POST /api/timer/stop` – stop the active timer for a user and return the log with duration.
+
+### Keep Alive Ping
+Run `keepAlive.js` to prevent the Render backend from sleeping:
+```bash
+node keepAlive.js &
+```
+This pings `https://your-service-name.onrender.com` every 14 minutes. You can keep this running in the background or launch it from your desktop app or extension startup script.
