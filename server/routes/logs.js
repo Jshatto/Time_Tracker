@@ -22,17 +22,45 @@ router.get('/summary', async (req, res) => {
     const unit = req.query.unit === 'hours' ? 'hours' : 'ms';
     const results = await TimeLog.aggregate([
       {
+        $match: {
+          endTime: { $exists: true } // Only completed time logs
+        }
+      },
+      {
         $group: {
-          _id: { userId: '$userId', project: '$project' },
+          _id: { 
+            userId: '$userId', 
+            project: '$project',
+            client: '$client'
+          },
           totalMs: { $sum: '$duration' },
+          sessionCount: { $sum: 1 }
         },
       },
+      {
+        $lookup: {
+          from: 'projects',
+          localField: '_id.project',
+          foreignField: '_id',
+          as: 'projectInfo'
+        }
+      },
+      {
+        $lookup: {
+          from: 'clients',
+          localField: '_id.client',
+          foreignField: '_id',
+          as: 'clientInfo'
+        }
+      }
     ]);
 
     const summary = results.map((r) => {
       const base = {
         userId: r._id.userId,
-        project: r._id.project,
+        project: r.projectInfo[0] || null,
+        client: r.clientInfo[0] || null,
+        sessionCount: r.sessionCount
       };
       if (unit === 'hours') {
         return { ...base, hours: r.totalMs / 3600000 };
@@ -42,7 +70,47 @@ router.get('/summary', async (req, res) => {
 
     res.json(summary);
   } catch (err) {
+    console.error('Error fetching summary:', err);
     res.status(500).json({ error: 'Failed to fetch summary' });
+  }
+});
+
+// GET /api/logs/detailed/:userId - Get detailed time logs for a user
+router.get('/detailed/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { startDate, endDate, project, client } = req.query;
+    
+    let query = { 
+      userId, 
+      endTime: { $exists: true } 
+    };
+    
+    // Add date filters if provided
+    if (startDate || endDate) {
+      query.startTime = {};
+      if (startDate) query.startTime.$gte = new Date(startDate);
+      if (endDate) query.startTime.$lte = new Date(endDate);
+    }
+    
+    // Add project filter if provided
+    if (project) {
+      query.project = project;
+    }
+    
+    // Add client filter if provided
+    if (client) {
+      query.client = client;
+    }
+    
+    const logs = await TimeLog.find(query)
+      .populate(['project', 'client'])
+      .sort({ startTime: -1 });
+      
+    res.json(logs);
+  } catch (err) {
+    console.error('Error fetching detailed logs:', err);
+    res.status(500).json({ error: 'Failed to fetch detailed logs' });
   }
 });
 
