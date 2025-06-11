@@ -2,14 +2,18 @@
 const getApiBase = () => {
   // For Vite (React dashboard)
   if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    return import.meta.env.VITE_API_URL || window.location.origin;
   }
   // For Node.js/Electron (desktop app)
   if (typeof process !== 'undefined' && process.env) {
-    return process.env.API_URL || 'http://localhost:5000';
+    return process.env.API_URL || 'http://localhost:3000';
+  }
+  // For browser
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
   }
   // Fallback
-  return 'http://localhost:5000';
+  return 'http://localhost:3000';
 };
 
 const API_BASE = getApiBase();

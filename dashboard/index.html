@@ -1,17 +1,478 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Time Tracker Dashboard</title>
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../styles.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-<!-- In HTML files -->
-<button type="submit" disabled={isLoading} aria-label="Add time log entry">
-  {isLoading ? 'Saving...' : 'Add Log'}
-</button>
-  </body>
+    <title>Time Tracker</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Time Tracker</h1>
+            <p>Professional time tracking reimagined</p>
+        </div>
+
+        <div class="glass-card">
+            <div class="timer-section">
+                <div class="form-section">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="clientSelect">Client</label>
+                            <select id="clientSelect">
+                                <option value="">Select a client...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openClientModal()">Add Client</button>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectSelect">Project</label>
+                            <select id="projectSelect">
+                                <option value="">Select a project...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="openProjectModal()">Add Project</button>
+                    </div>
+                </div>
+
+                <div class="timer-display">
+                    <div class="timer-time" id="timerDisplay">00:00:00</div>
+                    <div class="timer-status stopped" id="timerStatus">Ready to start</div>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="btn btn-success" id="startBtn" onclick="startTimer()">Start Timer</button>
+                    <button class="btn btn-danger" id="stopBtn" onclick="stopTimer()" disabled>Stop Timer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card recent-entries">
+            <h3>Recent Time Entries</h3>
+            <div id="recentEntries">
+                <div class="empty-state">No recent entries found.</div>
+            </div>
+        </div>
+
+        <!-- React Dashboard Integration -->
+        <div id="react-dashboard"></div>
+    </div>
+
+    <!-- Add Client Modal -->
+    <div id="clientModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeClientModal()">&times;</span>
+            <h3>Add New Client</h3>
+            <div class="form-group">
+                <label for="newClientName">Client Name</label>
+                <input type="text" id="newClientName" placeholder="Enter client name">
+            </div>
+            <button class="btn btn-primary" onclick="createClient()">Create Client</button>
+        </div>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProjectModal()">&times;</span>
+            <h3>Add New Project</h3>
+            <div class="form-group">
+                <label for="newProjectName">Project Name</label>
+                <input type="text" id="newProjectName" placeholder="Enter project name">
+            </div>
+            <div class="form-group">
+                <label for="newProjectClient">Client (Optional)</label>
+                <select id="newProjectClient">
+                    <option value="">No client</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="newProjectColor">Project Color</label>
+                <input type="color" id="newProjectColor" value="#6366f1">
+            </div>
+            <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+        </div>
+    </div>
+
+    <!-- Your existing JavaScript -->
+    <script>
+        let timerInterval;
+        let startTime;
+        let isRunning = false;
+        let currentTimer = null;
+
+        function getUserId() {
+            return 'default-user';
+        }
+
+        function updateTimerDisplay() {
+            if (isRunning && startTime) {
+                const elapsed = Date.now() - startTime;
+                const hours = Math.floor(elapsed / 3600000);
+                const minutes = Math.floor((elapsed % 3600000) / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                
+                const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('timerDisplay').textContent = display;
+            }
+        }
+
+        function formatDuration(milliseconds) {
+            const hours = Math.floor(milliseconds / 3600000);
+            const minutes = Math.floor((milliseconds % 3600000) / 60000);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else {
+                return `${minutes}m`;
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        async function loadClients() {
+            try {
+                const response = await fetch('/clients');
+                const clients = await response.json();
+                
+                const clientSelect = document.getElementById('clientSelect');
+                const newProjectClient = document.getElementById('newProjectClient');
+                
+                clientSelect.innerHTML = '<option value="">Select a client...</option>';
+                newProjectClient.innerHTML = '<option value="">No client</option>';
+                
+                clients.forEach(client => {
+                    const option = `<option value="${client._id}">${client.name}</option>`;
+                    clientSelect.innerHTML += option;
+                    newProjectClient.innerHTML += option;
+                });
+            } catch (error) {
+                console.error('Error loading clients:', error);
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await fetch('/projects');
+                const projects = await response.json();
+                
+                const projectSelect = document.getElementById('projectSelect');
+                projectSelect.innerHTML = '<option value="">Select a project...</option>';
+                
+                projects.forEach(project => {
+                    const clientName = project.client ? project.client.name : 'No Client';
+                    const clientId = project.client ? project.client._id : '';
+                    const option = `<option value="${project._id}" data-client="${clientId}">${project.name} (${clientName})</option>`;
+                    projectSelect.innerHTML += option;
+                });
+            } catch (error) {
+                console.error('Error loading projects:', error);
+            }
+        }
+
+        async function loadRecentEntries() {
+            const userId = getUserId();
+            
+            try {
+                const response = await fetch(`/api/timer/recent/${userId}`);
+                const entries = await response.json();
+                
+                const container = document.getElementById('recentEntries');
+                
+                if (entries.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No recent entries found.</div>';
+                    return;
+                }
+                
+                container.innerHTML = entries.map(entry => {
+                    const projectName = entry.project ? entry.project.name : 'No Project';
+                    const clientName = entry.client ? entry.client.name : 'No Client';
+                    
+                    return `
+                        <div class="entry-item">
+                            <div class="entry-info">
+                                <div class="entry-project">${projectName}</div>
+                                <div class="entry-client">${clientName}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="entry-duration">${formatDuration(entry.duration)}</div>
+                                <div class="entry-date">${formatDate(entry.startTime)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading recent entries:', error);
+                document.getElementById('recentEntries').innerHTML = '<div class="empty-state">Error loading entries.</div>';
+            }
+        }
+
+        async function checkCurrentTimer() {
+            const userId = getUserId();
+            
+            try {
+                const response = await fetch(`/api/timer/current/${userId}`);
+                const data = await response.json();
+                
+                if (data.active) {
+                    isRunning = true;
+                    currentTimer = data.timer;
+                    startTime = new Date(data.timer.startTime).getTime();
+                    
+                    document.getElementById('startBtn').disabled = true;
+                    document.getElementById('stopBtn').disabled = false;
+                    document.getElementById('timerStatus').textContent = 'Timer running';
+                    document.getElementById('timerStatus').className = 'timer-status running';
+                    document.getElementById('timerDisplay').className = 'timer-time running';
+                    
+                    if (data.timer.client) {
+                        document.getElementById('clientSelect').value = data.timer.client._id;
+                    }
+                    if (data.timer.project) {
+                        document.getElementById('projectSelect').value = data.timer.project._id;
+                    }
+                    
+                    timerInterval = setInterval(updateTimerDisplay, 1000);
+                    updateTimerDisplay();
+                } else {
+                    isRunning = false;
+                    document.getElementById('startBtn').disabled = false;
+                    document.getElementById('stopBtn').disabled = true;
+                    document.getElementById('timerStatus').textContent = 'Ready to start';
+                    document.getElementById('timerStatus').className = 'timer-status stopped';
+                    document.getElementById('timerDisplay').className = 'timer-time';
+                }
+            } catch (error) {
+                console.error('Error checking current timer:', error);
+            }
+        }
+
+        async function startTimer() {
+            const userId = getUserId();
+            const projectId = document.getElementById('projectSelect').value;
+            const clientId = document.getElementById('clientSelect').value;
+
+            try {
+                const response = await fetch('/api/timer/start', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userId,
+                        projectId: projectId,
+                        clientId: clientId,
+                        description: ''
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message);
+                }
+
+                const data = await response.json();
+                currentTimer = data;
+                
+                isRunning = true;
+                startTime = new Date(data.startTime).getTime();
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('timerStatus').textContent = 'Timer running';
+                document.getElementById('timerStatus').className = 'timer-status running';
+                document.getElementById('timerDisplay').className = 'timer-time running';
+                
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+                updateTimerDisplay();
+                
+            } catch (error) {
+                console.error('Error starting timer:', error);
+                alert('Error starting timer: ' + error.message);
+            }
+        }
+
+        async function stopTimer() {
+            const userId = getUserId();
+
+            try {
+                const response = await fetch('/api/timer/stop', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: userId })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message);
+                }
+
+                const data = await response.json();
+                
+                isRunning = false;
+                clearInterval(timerInterval);
+                currentTimer = null;
+                
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                document.getElementById('timerStatus').textContent = 'Ready to start';
+                document.getElementById('timerStatus').className = 'timer-status stopped';
+                document.getElementById('timerDisplay').textContent = '00:00:00';
+                document.getElementById('timerDisplay').className = 'timer-time';
+                
+                document.getElementById('clientSelect').value = '';
+                document.getElementById('projectSelect').value = '';
+                
+                loadRecentEntries();
+                
+            } catch (error) {
+                console.error('Error stopping timer:', error);
+                alert('Error stopping timer: ' + error.message);
+            }
+        }
+
+        async function createClient() {
+            const name = document.getElementById('newClientName').value.trim();
+            
+            if (!name) {
+                alert('Please enter a client name');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: name })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to create client');
+                }
+                
+                document.getElementById('newClientName').value = '';
+                closeClientModal();
+                loadClients();
+                
+            } catch (error) {
+                console.error('Error creating client:', error);
+                alert('Error creating client: ' + error.message);
+            }
+        }
+
+        async function createProject() {
+            const name = document.getElementById('newProjectName').value.trim();
+            const clientId = document.getElementById('newProjectClient').value;
+            const color = document.getElementById('newProjectColor').value;
+            
+            if (!name) {
+                alert('Please enter a project name');
+                return;
+            }
+            
+            try {
+                const projectData = { 
+                    name: name, 
+                    color: color
+                };
+                
+                if (clientId) {
+                    projectData.client = clientId;
+                }
+                
+                const response = await fetch('/projects', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(projectData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to create project');
+                }
+                
+                document.getElementById('newProjectName').value = '';
+                document.getElementById('newProjectClient').value = '';
+                document.getElementById('newProjectColor').value = '#6366f1';
+                closeProjectModal();
+                loadProjects();
+                
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert('Error creating project: ' + error.message);
+            }
+        }
+
+        function openClientModal() {
+            document.getElementById('clientModal').style.display = 'block';
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').style.display = 'none';
+        }
+
+        function openProjectModal() {
+            document.getElementById('projectModal').style.display = 'block';
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').style.display = 'none';
+        }
+
+        async function initializeApp() {
+            await loadClients();
+            await loadProjects();
+            await checkCurrentTimer();
+            await loadRecentEntries();
+        }
+
+        window.onclick = function(event) {
+            const clientModal = document.getElementById('clientModal');
+            const projectModal = document.getElementById('projectModal');
+            
+            if (event.target === clientModal) {
+                closeClientModal();
+            }
+            if (event.target === projectModal) {
+                closeProjectModal();
+            }
+        }
+
+        document.getElementById('projectSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const clientId = selectedOption.getAttribute('data-client');
+            
+            if (clientId) {
+                document.getElementById('clientSelect').value = clientId;
+            } else {
+                document.getElementById('clientSelect').value = '';
+            }
+        });
+
+        // Initialize
+        initializeApp();
+    </script>
+</body>
 </html>
