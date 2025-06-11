@@ -1,3 +1,10 @@
+global.chrome = {
+  runtime: {
+    onInstalled: {
+      addListener: jest.fn()
+    }
+  }
+};
 describe('Browser Extension Background Script', () => {
   test('should initialize correctly', () => {
     const consoleSpy = jest.spyOn(console, 'log');
