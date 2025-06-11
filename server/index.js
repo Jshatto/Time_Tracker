@@ -1,11 +1,31 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
+
+let timerState = { running: false, startTime: null };
+
+app.get('/timer', (req, res) => {
+  res.json(timerState);
+});
+
+app.post('/timer/start', (req, res) => {
+  timerState.running = true;
+  timerState.startTime = Date.now();
+  res.json(timerState);
+});
+
+app.post('/timer/stop', (req, res) => {
+  timerState.running = false;
+  timerState.startTime = null;
+  res.json(timerState);
+});
 
 const projectRoutes = require('./routes/projects');
 const clientRoutes = require('./routes/clients');
