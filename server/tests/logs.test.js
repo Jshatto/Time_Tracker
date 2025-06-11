@@ -9,9 +9,13 @@ jest.mock('../models/Log', () => ({
   find: jest.fn(),
   deleteMany: jest.fn(),
 }));
+jest.mock('../models/TimeLog', () => ({
+  aggregate: jest.fn(),
+}));
 
-const app = require('../index');
+const app = require('../app');
 const Log = require('../models/Log');
+const TimeLog = require('../models/TimeLog');
 
 beforeAll(async () => {
   jest.spyOn(mongoose, 'connect').mockResolvedValue();
@@ -56,5 +60,31 @@ describe('GET /api/logs/:userId', () => {
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
     expect(Log.find).toHaveBeenCalledWith({ userId: 'user1' });
+  });
+  });
+
+describe('GET /api/logs/summary', () => {
+  it('aggregates timelogs and returns milliseconds by default', async () => {
+    TimeLog.aggregate.mockResolvedValue([
+      { _id: { userId: 'user1', project: 'proj' }, totalMs: 3600000 },
+    ]);
+
+    const res = await request(app).get('/api/logs/summary');
+
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body[0]).toEqual({ userId: 'user1', project: 'proj', totalMs: 3600000 });
+    expect(TimeLog.aggregate).toHaveBeenCalled();
+  });
+
+  it('supports hours when unit=hours', async () => {
+    TimeLog.aggregate.mockResolvedValue([
+      { _id: { userId: 'user1', project: 'proj' }, totalMs: 7200000 },
+    ]);
+
+    const res = await request(app).get('/api/logs/summary?unit=hours');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body[0]).toEqual({ userId: 'user1', project: 'proj', hours: 2 });
   });
 });

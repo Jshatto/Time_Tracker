@@ -7,7 +7,9 @@ See `prompt.md` for full breakdown.
 
 ## 🚀 Run Instructions
 
-### Root (install all)
+### Root (install all workspaces)
+Running `npm install` from the repository root uses npm workspaces to install
+dependencies for the `server`, `desktop`, `extension`, and `dashboard` packages.
 ```bash
 npm install
 ```

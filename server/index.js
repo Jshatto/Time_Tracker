@@ -1,20 +1,20 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+// server/index.js
 const mongoose = require('mongoose');
+const app = require('./app');
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-let timerState = { running: false, startTime: null };
-
-app.get('/timer', (req, res) => {
-  res.json(timerState);
-});
-
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err.message);
+  });
 app.post('/timer/start', (req, res) => {
   timerState.running = true;
   timerState.startTime = Date.now();
@@ -37,17 +37,25 @@ app.use(express.json());
 app.use('/api/logs', require('./routes/logs'));
 
 app.use('/api/timer', require('./routes/timer'));
+function startServer() {
+  
+}
 
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('✅ MongoDB connected');
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-  });
-})
-.catch((err) => {
-  console.error('❌ MongoDB connection error:', err.message);
-});
+if (require.main === module) {
+  mongoose
+    .connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
+    .then(() => {
+      console.log('✅ MongoDB connected');
+      app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('❌ MongoDB connection error:', err.message);
+    });
+}
+
+module.exports = app;

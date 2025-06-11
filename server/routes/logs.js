@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Log = require('../models/Log');
+const TimeLog = require('../models/TimeLog');
 
 router.post('/', async (req, res) => {
   const { userId, message } = req.body;
@@ -12,6 +13,36 @@ router.post('/', async (req, res) => {
     res.status(201).json(log);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create log' });
+  }
+});
+
+// GET /api/logs/summary
+router.get('/summary', async (req, res) => {
+  try {
+    const unit = req.query.unit === 'hours' ? 'hours' : 'ms';
+    const results = await TimeLog.aggregate([
+      {
+        $group: {
+          _id: { userId: '$userId', project: '$project' },
+          totalMs: { $sum: '$duration' },
+        },
+      },
+    ]);
+
+    const summary = results.map((r) => {
+      const base = {
+        userId: r._id.userId,
+        project: r._id.project,
+      };
+      if (unit === 'hours') {
+        return { ...base, hours: r.totalMs / 3600000 };
+      }
+      return { ...base, totalMs: r.totalMs };
+    });
+
+    res.json(summary);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch summary' });
   }
 });
 

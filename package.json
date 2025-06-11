@@ -1,15 +1,5 @@
 {
-  "name": "server",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "jest"
-  },
-  "devDependencies": {
-    "jest": "^29.0.0",
-    "supertest": "^6.3.0",
-    "dotenv": "^16.0.0"
-  }
+"name": "time-tracker-monorepo",
+  "private": true,
+  "workspaces": ["server", "desktop", "extension", "dashboard"]
 }
