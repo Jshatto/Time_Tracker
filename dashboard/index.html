@@ -9,5 +9,9 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+<!-- In HTML files -->
+<button type="submit" disabled={isLoading} aria-label="Add time log entry">
+  {isLoading ? 'Saving...' : 'Add Log'}
+</button>
   </body>
 </html>

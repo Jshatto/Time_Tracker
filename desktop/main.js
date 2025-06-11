@@ -8,7 +8,9 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'renderer', 'renderer.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      enableRemoteModule: false, // Add this
+     allowRunningInsecureContent: false // Add this
     }
   });
 

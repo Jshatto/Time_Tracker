@@ -1,19 +1,30 @@
 {
   "name": "dashboard",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "start": "vite"
+    "start": "vite",
+    "preview": "vite preview",
+    "test": "jest"
   },
   "dependencies": {
     "react": "^18.3.1",
-   "react-chartjs-2": "^5.2.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "chart.js": "^4.4.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.2.10"
+    "vite": "^5.2.10",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/jest-dom": "^5.16.5",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/src/setupTests.js"]
   }
 }
