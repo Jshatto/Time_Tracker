@@ -1,46 +1,28 @@
 // server/index.js
+require('dotenv').config(); // Add this if not present
 const mongoose = require('mongoose');
 const express = require('express');
 const app = require('./app');
 
-const PORT = process.env.PORT;
+// Add default values and validation
+const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// Enable JSON body parsing
-app.use(express.json());
+// Validate required environment variables
+if (!MONGO_URI) {
+  console.error('❌ MONGO_URI environment variable is required');
+  process.exit(1);
+}
 
+// Routes are already configured in app.js, no need to duplicate here
 
-app.post('/timer/start', (req, res) => {
-  timerState.running = true;
-  timerState.startTime = Date.now();
-  res.json(timerState);
-});
-
-app.post('/timer/stop', (req, res) => {
-  timerState.running = false;
-  timerState.startTime = null;
-  res.json(timerState);
-});
-
-const projectRoutes = require('./routes/projects');
-const clientRoutes = require('./routes/clients');
-
-app.use('/projects', projectRoutes);
-app.use('/clients', clientRoutes);
-
-app.use('/api/logs', require('./routes/logs'));
-
-app.use('/api/timer', require('./routes/timer'));
 function startServer() {
-  
+  // Server startup logic can go here if needed
 }
 
 if (require.main === module) {
   mongoose
-    .connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    .connect(MONGO_URI) // ✅ Remove deprecated options
     .then(() => {
       console.log('✅ MongoDB connected');
       app.listen(PORT, () => {
@@ -49,6 +31,7 @@ if (require.main === module) {
     })
     .catch((err) => {
       console.error('❌ MongoDB connection error:', err.message);
+      process.exit(1); // Exit on connection failure
     });
 }
 
