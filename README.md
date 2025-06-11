@@ -35,6 +35,9 @@ npm start
 
 ## 🛠 Environment
 Create `.env` files for each service using `.env.example` as a guide.
-=======
-# Time_Tracker
-340f881500515f0b4dbc93739fce5e03abc76df7
+
+## API Endpoints
+The server exposes timer routes:
+
+- `POST /api/timer/start` – begin tracking for a user. Body should include `userId`.
+- `POST /api/timer/stop` – stop the active timer for a user and return the log with duration.

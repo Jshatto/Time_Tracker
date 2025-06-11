@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+   "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.3.1",
+    "chart.js": "^4.4.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
