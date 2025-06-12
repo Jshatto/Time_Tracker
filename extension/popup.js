@@ -25,7 +25,7 @@ let clients = [];
 let projects = [];
 
 // Debug mode (set to true for troubleshooting)
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 // Utility Functions
 function log(message, data = null) {
@@ -94,7 +94,8 @@ async function findWorkingApiUrl() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch(`${url}/api/timer/state`, {
+      // Test with the health endpoint first
+      const response = await fetch(`${url}/health`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal
@@ -119,7 +120,9 @@ async function findWorkingApiUrl() {
 
 async function fetchTimerState() {
   const apiUrl = await findWorkingApiUrl();
-  const response = await fetch(`${apiUrl}/api/timer/state`, {
+  
+  // Use the correct endpoint: /api/timer/current/extension-user
+  const response = await fetch(`${apiUrl}/api/timer/current/extension-user`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' }
   });
@@ -130,13 +133,26 @@ async function fetchTimerState() {
   
   const data = await response.json();
   log('Timer state fetched', data);
-  return data;
+  
+  // Transform the response to match what our UI expects
+  if (data.active && data.timer) {
+    return {
+      running: true,
+      startTime: data.timer.startTime,
+      timer: data.timer
+    };
+  } else {
+    return {
+      running: false,
+      startTime: null
+    };
+  }
 }
 
 async function fetchClients() {
   const apiUrl = await findWorkingApiUrl();
   try {
-    const response = await fetch(`${apiUrl}/api/clients`, {
+    const response = await fetch(`${apiUrl}/clients`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -158,7 +174,7 @@ async function fetchClients() {
 async function fetchProjects() {
   const apiUrl = await findWorkingApiUrl();
   try {
-    const response = await fetch(`${apiUrl}/api/projects`, {
+    const response = await fetch(`${apiUrl}/projects`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' }
     });
@@ -380,8 +396,9 @@ openDashboardBtn.addEventListener('click', openDashboard);
 // Project selection auto-selects client
 projectSelectEl.addEventListener('change', function() {
   const selectedProject = projects.find(p => (p._id || p.id) === this.value);
-  if (selectedProject && selectedProject.clientId) {
-    clientSelectEl.value = selectedProject.clientId;
+  if (selectedProject && (selectedProject.clientId || selectedProject.client)) {
+    const clientId = selectedProject.clientId || selectedProject.client._id || selectedProject.client;
+    clientSelectEl.value = clientId;
   }
 });
 
