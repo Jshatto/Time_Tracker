@@ -1,5 +1,11 @@
 {
-"name": "time-tracker-monorepo",
-  "private": true,
-  "workspaces": ["server", "desktop", "extension", "dashboard"]
+   "name": "time-tracker-monorepo",
+   "private": true,
+    "workspaces": [
+    "server",
+    "desktop",
+    "extension",
+    "dashboard",
+    "mobile"
+  ]
 }

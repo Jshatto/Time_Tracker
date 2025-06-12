@@ -6,6 +6,7 @@ services:
     rootDir: server
     buildCommand: npm install
     startCommand: node index.js
-    envVars:
+envVars:
       - key: MONGO_URI
         value: mongodb+srv://timer-user:xeAqUYc4IgCBe8DD@cluster0.h9lehd6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+         fromEnv: MONGO_URI

@@ -1,6 +1,6 @@
 const https = require('https');
 
-const URL = 'https://your-service-name.onrender.com';
+const URL = 'https://time-tracker-nust.onrender.com';
 const INTERVAL = 14 * 60 * 1000; // 14 minutes in milliseconds
 
 function ping() {

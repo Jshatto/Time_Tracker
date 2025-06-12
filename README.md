@@ -36,8 +36,17 @@ cd dashboard
 npm start
 ```
 
+### Mobile Widget
+```bash
+cd mobile
+npm start
+```
+
+
 ## 🛠 Environment
 Create `.env` files for each service using `.env.example` as a guide.
+When deploying on Render, add a **MONGO_URI** secret in the dashboard and
+reference it from `render.yaml`.
 
 ## API Endpoints
 The server exposes timer routes:
@@ -46,8 +55,8 @@ The server exposes timer routes:
 - - `POST /api/timer/stop` – stop the active timer for a user and return the log with duration.
 
 ### Keep Alive Ping
-Run `keepAlive.js` to prevent the Render backend from sleeping:
+nder's free tier will put your backend to sleep when it's idle. Run `keepAlive.js` from an external environment so it can continuously ping your deployment:
 ```bash
-node keepAlive.js &
+npm run start-keepalive
 ```
 This pings `https://your-service-name.onrender.com` every 14 minutes. You can keep this running in the background or launch it from your desktop app or extension startup script.
